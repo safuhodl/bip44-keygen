@@ -10,10 +10,12 @@ from . import utils
 from .bip32 import InvalidKeyException
 
 HD_PATH_BIP44 = "m/44'/0'/0'"
+HD_PATH_BIP84 = "m/84'/0'/0'"
 
 class Bip44Wallet:
-    def __init__(self, mnemonic: str):
+    def __init__(self, mnemonic: str, segwit: bool):
         wordlist = bip39.load_wordlist()
+        self.segwit = segwit
         try:
             expanded = bip39.expand(wordlist, mnemonic)
             if expanded != mnemonic:
@@ -28,11 +30,12 @@ class Bip44Wallet:
         
         self.mnemonic_fingerprint = hashlib.sha256(
                 mnemonic.encode("utf-8")).digest()[:4].hex().upper()
-        self.vbyte_pair = tuple(binascii.unhexlify(b) for b in bip32.x)
+        vbytes = bip32.x if not segwit else bip32.z
+        self.vbyte_pair = tuple(binascii.unhexlify(b) for b in vbytes)
         
-        path = bip32.parse_path(HD_PATH_BIP44)
-        self.root_node = bip32.seed_to_root_key(seed, self.vbyte_pair)
+        path = bip32.parse_path(HD_PATH_BIP44 if not segwit else HD_PATH_BIP84)
 
+        self.root_node = bip32.seed_to_root_key(seed, self.vbyte_pair)
         self.purpose_node = self.root_node.child(path[1])
         self.coin_node = self.purpose_node.child(path[2])
         self.account_node = self.coin_node.child(path[3])
@@ -49,7 +52,7 @@ class Bip44Wallet:
             priv_int = node.key
             pub_int = ecc.priv_to_pub(priv_int)
             wif = base58.b58encode_check(b'\x80' + bip32.ser256(priv_int) + b'\x01').decode()
-            address = utils.pub_to_addr(pub_int).decode()
+            address = utils.pub_to_addr(pub_int, self.segwit)
             result.append((i, address, wif))
         return result
 

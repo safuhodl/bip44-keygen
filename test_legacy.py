@@ -34,7 +34,7 @@ expected_acc_xpub = "xpub6CoXZ5MT9hcuD9VMgbVeoSYFVAmaMua4MmcAFcskorEYVUsEP5eKmYM
 expected_acc_xpriv = "xprv9ypB9ZpZKL4bzfQtaZxeSJbWw8w5xSrCzYgZTEU9FWhZcgY5qYL5Dk2qjBwbQiZav3Y2hXSPhd1gj4zginkqhiedEBznAMpW2xnyrVpmmQD"
 
 # setup
-wallet = bip44wallet.Bip44Wallet(mnemonic)
+wallet = bip44wallet.Bip44Wallet(mnemonic, False)
 ext_addresses = wallet.generate(0, 10, True)
 int_addresses = wallet.generate(0, 10, False)
 
